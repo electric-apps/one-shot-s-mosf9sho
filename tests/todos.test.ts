@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { todoSelectSchema, todoInsertSchema } from "@/db/zod-schemas"
-import { generateValidRow, generateRowWithout } from "./helpers/schema-test-utils"
+import { generateValidRow } from "./helpers/schema-test-utils"
 
 describe("todos schema", () => {
 	it("has required fields", () => {
-		const row = generateValidRow(todoSelectSchema as Parameters<typeof generateValidRow>[0])
+		const row = generateValidRow(todoSelectSchema as unknown as Parameters<typeof generateValidRow>[0])
 		expect(row).toHaveProperty("id")
 		expect(row).toHaveProperty("title")
 		expect(row).toHaveProperty("completed")
