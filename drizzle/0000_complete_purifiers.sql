@@ -11,21 +11,36 @@ ALTER TABLE "todos" REPLICA IDENTITY FULL;
 DO $$
 DECLARE
   pub record;
-  pub_count int;
 BEGIN
-  -- Add todos to any already-existing explicit-table publications.
+  -- Case 1: a FOR ALL TABLES publication already exists (e.g. Electric
+  -- started first and created electric_publication FOR ALL TABLES).
+  -- Every table is already covered — nothing to do.
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE puballtables = true) THEN
+    RETURN;
+  END IF;
+
+  -- Case 2: explicit-table publications exist — add todos to each.
   -- Covers Electric Cloud (cloud_electric_pub_*) and a local Electric
   -- that was started before the migration ran.
   FOR pub IN SELECT pubname FROM pg_publication WHERE puballtables = false LOOP
-    EXECUTE format('ALTER PUBLICATION %I ADD TABLE todos', pub.pubname);
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = pub.pubname AND tablename = 'todos'
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION %I ADD TABLE todos', pub.pubname);
+    END IF;
   END LOOP;
 
-  -- If no explicit-table publication exists yet (fresh local Postgres,
-  -- migration runs before Electric starts), pre-create the default
-  -- Electric publication so Electric picks it up on first start.
-  SELECT count(*) INTO pub_count FROM pg_publication WHERE puballtables = false;
-  IF pub_count = 0 THEN
-    CREATE PUBLICATION electric_publication FOR TABLE todos;
+  -- Case 3: no publication exists yet (fresh Postgres, Electric hasn't
+  -- started). Pre-create electric_publication so Electric reuses it.
+  -- Wrapped in a sub-block so a duplicate_object error (another process
+  -- created it concurrently) never rolls back the outer transaction.
+  IF NOT EXISTS (SELECT 1 FROM pg_publication) THEN
+    BEGIN
+      CREATE PUBLICATION electric_publication FOR TABLE todos;
+    EXCEPTION WHEN duplicate_object THEN
+      NULL; -- concurrent create, safe to ignore
+    END;
   END IF;
 END;
 $$;
