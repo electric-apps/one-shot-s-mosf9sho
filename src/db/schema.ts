@@ -1,14 +1,9 @@
-// Drizzle schema — the single source of truth for your data model.
-// Define your tables here using pgTable(). The agent will fill this in.
-//
-// Example:
-// import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core"
-//
-// export const todos = pgTable("todos", {
-//   id: uuid().primaryKey().defaultRandom(),
-//   text: text().notNull(),
-//   completed: boolean().notNull().default(false),
-//   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// })
+import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core"
 
-export {}
+export const todos = pgTable("todos", {
+	id: text("id").primaryKey(),
+	title: text("title").notNull(),
+	completed: boolean("completed").notNull().default(false),
+	created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
