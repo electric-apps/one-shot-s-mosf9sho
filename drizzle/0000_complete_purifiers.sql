@@ -5,3 +5,5 @@ CREATE TABLE "todos" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+
+ALTER TABLE "todos" REPLICA IDENTITY FULL;
