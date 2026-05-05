@@ -10,11 +10,10 @@ ALTER TABLE "todos" REPLICA IDENTITY FULL;
 
 DO $$
 DECLARE
-  pub_name text;
+  pub record;
 BEGIN
-  SELECT pubname INTO pub_name FROM pg_publication WHERE pubname LIKE 'cloud_electric%' LIMIT 1;
-  IF pub_name IS NOT NULL THEN
-    EXECUTE format('ALTER PUBLICATION %I ADD TABLE todos', pub_name);
-  END IF;
+  FOR pub IN SELECT pubname FROM pg_publication WHERE puballtables = false LOOP
+    EXECUTE format('ALTER PUBLICATION %I ADD TABLE todos', pub.pubname);
+  END LOOP;
 END;
 $$;
