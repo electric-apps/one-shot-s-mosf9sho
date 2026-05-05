@@ -30,8 +30,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           radius="medium"
           panelBackground="solid"
         >
-          {children}
-          <Toaster />
+          <Toaster>{children}</Toaster>
         </Theme>
         <Scripts />
       </body>
